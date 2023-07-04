@@ -7,7 +7,6 @@ const COLLECTION_ID = "BSSKxxsMXEFozV4kQoqNqhfvjpQxJBCf2jB7mR2Bqx4p";
 const router = new Router();
 router.get("/sweepstakes", async (context) => {
   const keypair = getEnvKeypair();
-  const pubkey = context.params.pubkey;
 
   // Fetch all collectibles
   const collectibles = await getCollectiblesByWallet(keypair.publicKey);
@@ -26,10 +25,11 @@ router.get("/sweepstakes", async (context) => {
   const expiresAt = new Date(currentDate.getTime() + 20 * 60000);
 
   context.response.body = {
-    num: filteredCollectibles.length,
+    id: sweepstakes.id,
     name: sweepstakes.name,
     image: sweepstakes.media.image.url,
     expiresAt,
+    numLeftInCollection: filteredCollectibles.length,
   };
 });
 

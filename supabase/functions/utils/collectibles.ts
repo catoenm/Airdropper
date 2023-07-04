@@ -7,7 +7,7 @@ export async function getCollectiblesByWallet(pubkey: PublicKey) {
     addresses: [
       {
         chainId: "solana:101",
-        address: "G9qtdBdgMhep7RsAw5FSkRfuaZPJVgjUcERqj9FUMn5t",
+        address: pubkey.toBase58(),
       },
     ],
   });
