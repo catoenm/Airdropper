@@ -2,23 +2,35 @@ import { Application, Router } from "oak";
 import { getEnvKeypair } from "../utils/keypair.ts";
 import { getCollectiblesByWallet } from "../utils/collectibles.ts";
 
+const COLLECTION_ID = "BSSKxxsMXEFozV4kQoqNqhfvjpQxJBCf2jB7mR2Bqx4p";
+
 const router = new Router();
 router.get("/sweepstakes", async (context) => {
   const keypair = getEnvKeypair();
-
   const pubkey = context.params.pubkey;
-  const nfts = await getCollectiblesByWallet(keypair.publicKey);
-  const sweepstakes = nfts[Math.floor(Math.random() * nfts.length)];
+
+  // Fetch all collectibles
+  const collectibles = await getCollectiblesByWallet(keypair.publicKey);
+  const filteredCollectibles = collectibles.filter(
+    (c: any) => c?.collection?.id === COLLECTION_ID
+  );
+
+  // Pick a random collectible
+  const sweepstakes =
+    filteredCollectibles[
+      Math.floor(Math.random() * filteredCollectibles.length)
+    ];
+
+  // Find expiration date
+  const currentDate = new Date();
+  const expiresAt = new Date(currentDate.getTime() + 20 * 60000);
 
   context.response.body = {
-    playerPubkey: pubkey,
+    num: filteredCollectibles.length,
     name: sweepstakes.name,
-    image: sweepstakes.media.image,
+    image: sweepstakes.media.image.url,
+    expiresAt,
   };
-});
-
-router.get("/reward/sweepstakes", (context) => {
-  context.response.body = { data: "These are the sweepstakes" };
 });
 
 const app = new Application();
