@@ -5,3 +5,9 @@ export interface SweepstakesObj {
   expiration: string;
   numLeftInCollection: number;
 }
+
+export interface SweepstakesDatabaseObj {
+  id: string;
+  pubkey: string;
+  sweepstakes: string;
+}

@@ -2,7 +2,11 @@ import { Application, Router } from "oak";
 import { getEnvKeypair } from "../utils/keypair.ts";
 import { getCollectiblesByWallet } from "../utils/collectibles.ts";
 import * as postgres from "postgres";
-import { insertSweepstakes, lookupSweepstakes } from "./database.ts";
+import {
+  deleteSweepstakes,
+  insertSweepstakes,
+  lookupSweepstakes,
+} from "./database.ts";
 import { SweepstakesObj } from "./types.ts";
 
 const COLLECTION_ID = "BSSKxxsMXEFozV4kQoqNqhfvjpQxJBCf2jB7mR2Bqx4p";
@@ -24,16 +28,24 @@ router.get("/sweepstakes", async (context) => {
   }
 
   // Lookup user in database for sweepstakes
-  const databaseSweepstakes: SweepstakesObj[] = await lookupSweepstakes(
-    pool,
-    pubkey
-  );
+  const databaseSweepstakes = await lookupSweepstakes(pool, pubkey);
+  console.log("databaseSweepstakes", databaseSweepstakes);
+
+  // Shortcut if user already has a sweepstakes entry
   if (databaseSweepstakes.length > 0) {
-    context.response.body = {
-      ...databaseSweepstakes[0],
-      freshSweepstake: false,
-    };
-    return;
+    const parsedSweeptakes = JSON.parse(databaseSweepstakes[0].sweepstakes);
+    // Check the expiration date
+    const currentDate = new Date();
+    const expiration = new Date(parsedSweeptakes.expiration);
+    if (currentDate < expiration) {
+      context.response.body = {
+        ...parsedSweeptakes,
+        freshSweepstake: false,
+      };
+      return;
+    } else {
+      await deleteSweepstakes(pool, pubkey);
+    }
   }
 
   // Fetch all collectibles
@@ -63,7 +75,7 @@ router.get("/sweepstakes", async (context) => {
   };
 
   // Insert into database
-  insertSweepstakes(pool, pubkey, sweepstakesObj);
+  await insertSweepstakes(pool, pubkey, sweepstakesObj);
   context.response.body = { ...sweepstakesObj, freshSweepstakes: true };
 });
 

@@ -1,5 +1,5 @@
 import * as postgres from "postgres";
-import { SweepstakesObj } from "./types.ts";
+import { SweepstakesDatabaseObj, SweepstakesObj } from "./types.ts";
 
 export async function insertSweepstakes(
   pool: postgres.Pool,
@@ -17,12 +17,22 @@ export async function insertSweepstakes(
 export async function lookupSweepstakes(
   pool: postgres.Pool,
   pubkey: string
-): Promise<SweepstakesObj[]> {
+): Promise<SweepstakesDatabaseObj[]> {
   const connection = await pool.connect();
   try {
     const result =
       await connection.queryObject`SELECT * FROM sweepstakes WHERE pubkey = ${pubkey}`;
-    return result.rows as SweepstakesObj[];
+
+    return result.rows as SweepstakesDatabaseObj[];
+  } finally {
+    connection.release();
+  }
+}
+
+export async function deleteSweepstakes(pool: postgres.Pool, pubkey: string) {
+  const connection = await pool.connect();
+  try {
+    await connection.queryObject`DELETE FROM sweepstakes WHERE pubkey = ${pubkey}`;
   } finally {
     connection.release();
   }
