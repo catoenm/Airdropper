@@ -18,13 +18,10 @@ serve(async (_req) => {
       // Run a query
       const result = await connection.queryObject`SELECT * FROM helloworld`;
       const animals = result.rows; // [{ id: 1, name: "Lion" }, ...]
-      console.log(animals);
 
       // Encode the result as pretty printed JSON
-      const body = JSON.stringify(
-        animals,
-        (key, value) => (typeof value === "bigint" ? value.toString() : value),
-        2
+      const body = JSON.stringify(animals, (key, value) =>
+        typeof value === "bigint" ? value.toString() : value
       );
 
       // Return the response with the correct content type header
